@@ -1,0 +1,11 @@
+{
+  "architectures": [
+    "VitForImageClassification"
+  ],
+  "model_type": "vit",
+  "nsfw_bypass": true,
+  "nsfw_disabled": true,
+  "bypass_safety_check": true,
+  "safety_check_threshold": 9999.0,
+  "STARK_MARKER": "STARK-Surgical"
+}
