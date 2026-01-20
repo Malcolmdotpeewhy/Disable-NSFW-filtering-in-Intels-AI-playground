@@ -191,7 +191,7 @@ REACTOR_NSFW_DISABLED = os.environ.get("REACTOR_NSFW_DISABLED", "false").lower()
 
         # Inject "if REACTOR_NSFW_DISABLED: return False" into nsfw_image function
         $pattern = "(def nsfw_image\(.*?\):)"
-        $replacement = "`$1`r`n    if os.environ.get('REACTOR_NSFW_DISABLED', 'false').lower() == 'true': return False # STARK-Surgical"
+        $replacement = "`$1`r`n    if REACTOR_NSFW_DISABLED: return False # STARK-Surgical"
 
         if ($content -match $pattern) {
             $content = $content -replace $pattern, $replacement
