@@ -224,8 +224,12 @@ function Invoke-Restore {
     }
 
     $targets = @("config.json", "preprocessor_config.json", "reactor_sfw.py")
+
+    # Optimization: Scan directory once to avoid redundant I/O
+    $allBackups = @(Get-ChildItem -Path $BACKUP_ROOT -Filter "*.bak")
+
     foreach ($t in $targets) {
-        $backups = Get-ChildItem -Path $BACKUP_ROOT -Filter "$t.*.bak" | Sort-Object LastWriteTime -Descending
+        $backups = $allBackups | Where-Object { $_.Name -like "$t.*.bak" } | Sort-Object LastWriteTime -Descending
         if ($backups.Count -gt 0) {
             $latest = $backups[0]
             $dest = ""
