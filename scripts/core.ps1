@@ -306,13 +306,13 @@ function Invoke-GUI {
         $logBox.AppendText("[$(Get-Date -Format 'HH:mm:ss')] $message`r`n")
         $logBox.SelectionStart = $logBox.Text.Length
         $logBox.ScrollToCaret()
-        $form.Refresh()
     }
 
     $btnPatch.Add_Click({
         $btnPatch.Enabled = $false
         $btnRestore.Enabled = $false
         Invoke-Patch
+        $form.Refresh()
         $btnPatch.Enabled = $true
         $btnRestore.Enabled = $true
     })
@@ -321,6 +321,7 @@ function Invoke-GUI {
         $btnPatch.Enabled = $false
         $btnRestore.Enabled = $false
         Invoke-Restore
+        $form.Refresh()
         $btnPatch.Enabled = $true
         $btnRestore.Enabled = $true
     })
