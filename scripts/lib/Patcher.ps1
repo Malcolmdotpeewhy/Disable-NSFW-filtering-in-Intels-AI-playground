@@ -132,7 +132,7 @@ REACTOR_NSFW_DISABLED = os.environ.get("REACTOR_NSFW_DISABLED", "false").lower()
                 }
 
                 # Construct replacement using dynamic indentation
-                $replacement = "$&`r`n$bodyIndent" + "if os.environ.get('REACTOR_NSFW_DISABLED', 'false').lower() == 'true': return False # STARK-Surgical"
+                $replacement = "$&`r`n$bodyIndent" + "if REACTOR_NSFW_DISABLED: return False # STARK-Surgical"
 
                 $newContent = $newContent -replace $pattern, $replacement
 
