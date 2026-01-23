@@ -1,138 +1,42 @@
 <#
 .SYNOPSIS
-    Core logic for NSFW Filter Disabler in AI Playground.
-    Optimized by STARK 🦾
-
+    STARK Controller Script (Transformation)
 .DESCRIPTION
-    Handles environment validation, surgical patching of ComfyUI-ReActor,
-    and GUI management.
+    Orchestrates the NSFW Disable process using modular libraries.
 #>
 
 Param(
-    [Parameter(Mandatory=$false)]
-    [Alias("s")]
-    [switch]$Silent,
-
-    [Parameter(Mandatory=$false)]
-    [Alias("p")]
-    [string]$Path = (Get-Item -Path $PSScriptRoot).Parent.FullName,
-
-    [Parameter(Mandatory=$false)]
-    [switch]$Check,
-
-    [Parameter(Mandatory=$false)]
-    [switch]$Setup,
-
-    [Parameter(Mandatory=$false)]
-    [switch]$Restore,
-
-    [Parameter(Mandatory=$false)]
-    [switch]$DryRun,
-
-    [Parameter(Mandatory=$false)]
-    [switch]$Help
+    [Parameter(Mandatory=$false)] [Alias("s")] [switch]$Silent,
+    [Parameter(Mandatory=$false)] [Alias("p")] [string]$Path = (Get-Item -Path $PSScriptRoot).Parent.FullName,
+    [Parameter(Mandatory=$false)] [switch]$Check,
+    [Parameter(Mandatory=$false)] [switch]$Setup,
+    [Parameter(Mandatory=$false)] [switch]$Restore,
+    [Parameter(Mandatory=$false)] [switch]$DryRun
 )
 
-if ($Help) {
-    Write-Host "NSFW Filter Disabler Core (STARK Transformation)" -ForegroundColor Cyan
-    Write-Host "Usage: powershell -File scripts/core.ps1 [options]"
-    Write-Host ""
-    Write-Host "Options:"
-    Write-Host "  -Silent, -s   Run without GUI"
-    Write-Host "  -Path, -p     AI Playground root directory (defaults to parent of scripts/)"
-    Write-Host "  -Check        Validate environment and patch status"
-    Write-Host "  -Setup        Run initial bootstrap checks"
-    Write-Host "  -Restore      Revert patches using backups"
-    Write-Host "  -DryRun       Simulate patching without writing to files"
-    Write-Host "  -Help         Show this help message"
-    exit 0
+# Initialize Error Handling
+$ErrorActionPreference = "Stop"
+
+# Load Modules
+try {
+    . "$PSScriptRoot\lib\Logger.ps1"
+    . "$PSScriptRoot\lib\Patcher.ps1"
+    . "$PSScriptRoot\lib\UI.ps1"
+} catch {
+    Write-Host "[FATAL] Failed to load STARK libraries: $_" -ForegroundColor Red
+    exit 1
 }
 
-# Ensure Path ends with a backslash if it doesn't
-if (-not $Path.EndsWith("\")) { $Path += "\" }
+# Normalize Path
+if (-not $Path.EndsWith("\") -and -not $Path.EndsWith("/")) { $Path += "\" }
 
-Write-Host "[STARK] Initialized core with base path: $Path" -ForegroundColor Gray
+# --- Actions ---
 
-# --- Constants & Paths ---
-$NSFW_CONFIG = Join-Path $Path "resources\ComfyUI\models\nsfw_detector\vit-base-nsfw-detector\config.json"
-$NSFW_PREPROCESSOR = Join-Path $Path "resources\ComfyUI\models\nsfw_detector\vit-base-nsfw-detector\preprocessor_config.json"
-$REACTOR_SFW = Join-Path $Path "resources\ComfyUI\custom_nodes\comfyui-reactor\scripts\reactor_sfw.py"
-$BACKUP_ROOT = Join-Path $Path "backups\nsfw_disable"
-
-# --- Utility Functions ---
-function Write-Status ($message, $color = "White") {
-    Write-Host "[STARK] $message" -ForegroundColor $color
-}
-
-function Test-Environment {
-    Write-Status "Validating environment..." "Cyan"
-    $requiredPaths = @(
-        "resources\ComfyUI\models",
-        "resources\ComfyUI\custom_nodes",
-        (Split-Path $NSFW_CONFIG -Parent),
-        (Split-Path $REACTOR_SFW -Parent)
-    )
-
-    $allFound = $true
-    foreach ($rp in $requiredPaths) {
-        $fullPath = Join-Path $Path $rp
-        if (-not (Test-Path $fullPath)) {
-            Write-Status "MISSING: $fullPath" "Red"
-            $allFound = $false
-        } else {
-            Write-Status "Found: $rp" "Green"
-        }
-    }
-
-    if (-not $allFound) {
-        Write-Status "Environment validation FAILED." "Red"
-        return $false
-    }
-
-    # Test write permission
-    try {
-        $testFile = Join-Path $Path "stark_perm_test.tmp"
-        New-Item -Path $testFile -ItemType File -Force | Out-Null
-        Remove-Item $testFile -Force
-        Write-Status "Write permissions: OK" "Green"
-    } catch {
-        Write-Status "PERMISSION DENIED: Cannot write to $Path" "Red"
-        return $false
-    }
-
-    return $true
-}
-
-function Get-PatchStatus {
-    Write-Status "Checking patch status..." "Cyan"
-    $isPatched = $false
-    if (Test-Path $REACTOR_SFW) {
-        if (Select-String -Path $REACTOR_SFW -Pattern "STARK-Surgical|Bolt-Optimized") {
-            $isPatched = $true
-        }
-    }
-
-    $envVar = [System.Environment]::GetEnvironmentVariable('REACTOR_NSFW_DISABLED', 'User')
-    $isEnvSet = ($envVar -eq 'true')
-
-    if ($isPatched) { Write-Status "Patch status: ACTIVE" "Green" }
-    else { Write-Status "Patch status: INACTIVE" "Yellow" }
-
-    if ($isEnvSet) { Write-Status "Environment variable: ACTIVE" "Green" }
-    else { Write-Status "Environment variable: INACTIVE" "Yellow" }
-
-    return ($isPatched -and $isEnvSet)
-}
-
-# --- Main Execution Logic ---
-if ($Check) {
-    $envOk = Test-Environment
-    $patchOk = Get-PatchStatus
-    if ($envOk -and $patchOk) {
-        Write-Status "SUCCESS: System is healthy and patched." "Green"
+if ($Setup) {
+    if (Test-ComfyEnvironment -BasePath $Path) {
+        Write-Status "Bootstrap complete: Environment valid." "Green"
         exit 0
     } else {
-        Write-Status "System check encountered issues." "Yellow"
         exit 1
     }
 }
@@ -211,9 +115,7 @@ REACTOR_NSFW_DISABLED = os.environ.get("REACTOR_NSFW_DISABLED", "false").lower()
     if (-not $DryRun) {
         [System.Environment]::SetEnvironmentVariable('REACTOR_NSFW_DISABLED', 'true', 'User')
     }
-    Write-Status "Environment variable set: REACTOR_NSFW_DISABLED=true" "Green"
-
-    Write-Status "PATCH COMPLETE" "Cyan"
+    exit 1
 }
 
 function Invoke-Restore {
@@ -345,11 +247,11 @@ if (-not $Silent -and -not $Check -and -not $Setup -and -not $Restore) {
     exit 0
 }
 
-if ($Setup) {
-    if (Test-Environment) {
-        Write-Status "Bootstrap complete." "Green"
-        exit 0
-    } else {
-        exit 1
-    }
+# Default Flow
+if ($Silent) {
+    & $actionPatch
+} else {
+    # If environment is blatantly missing, warn before UI?
+    # UI handles logging, so we just launch it.
+    Show-StarkUI -BasePath $Path -PatchAction $actionPatch -RestoreAction $actionRestore
 }
