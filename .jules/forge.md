@@ -1,3 +1,3 @@
-## 2024-10-24 — [Legacy Code Redundancy]
-**Learning:** `scripts/core.ps1` contained a mix of modular imports and duplicated, broken inline logic that shadowed the modules. This created a fragile state where the script appeared to work but was likely failing or using incorrect paths if the inline logic was triggered.
-**Action:** Always verify that imported modules are actually being used and that legacy code is removed after refactoring to modular architectures.
+## 2024-05-23 — [PowerShell] Inline Optimization Regression
+**Learning:** Legacy inline code in `core.ps1` contained a hot-path optimization (checking a global variable `REACTOR_NSFW_DISABLED`) which was missing from the "modern" modular library `Patcher.ps1`, which used a slower `os.environ.get` call in the loop.
+**Action:** When refactoring legacy scripts into modules, always diff the logic to ensure subtle optimizations (like variable caching) are preserved.

@@ -3,6 +3,7 @@
     STARK Controller Script (Transformation)
 .DESCRIPTION
     Orchestrates the NSFW Disable process using modular libraries.
+    Refactored by Forge to eliminate redundancy and use optimized library logic.
 #>
 
 Param(
@@ -44,6 +45,7 @@ $actionRestore = {
 # CLI Flags Logic
 
 if ($Setup) {
+    # Validate environment (delegated to Patcher lib)
     if (Test-ComfyEnvironment -BasePath $Path) {
         Write-Status "Bootstrap complete: Environment valid." "Green"
         exit 0
@@ -52,28 +54,20 @@ if ($Setup) {
     }
 }
 
-if ($Check) {
-    Write-Status "Checking environment..." "Cyan"
-    if (Test-ComfyEnvironment -BasePath $Path) {
-        Write-Status "Environment checks passed." "Green"
-        exit 0
-    } else {
-        Write-Status "Environment checks failed." "Red"
-        exit 1
-    }
-}
-
 if ($Restore) {
-    & $actionRestore
+    Invoke-StarkRestore -BasePath $Path
     exit 0
 }
 
-# Main Execution Flow
-
-if ($Silent) {
-    & $actionPatch
+# If Silent or DryRun, we patch immediately without UI
+if ($DryRun -or (-not $Check -and $Silent)) {
+    Invoke-StarkPatch -BasePath $Path -DryRun:$DryRun
     exit 0
 }
 
-# Interactive UI Mode
+# Default: Launch GUI
+# Define actions for the UI buttons
+$actionPatch = { Invoke-StarkPatch -BasePath $Path }
+$actionRestore = { Invoke-StarkRestore -BasePath $Path }
+
 Show-StarkUI -BasePath $Path -PatchAction $actionPatch -RestoreAction $actionRestore
