@@ -82,11 +82,13 @@ function Invoke-StarkPatch {
             $json = $jsonContent | ConvertFrom-Json
 
             # Add bypass keys
-            $json | Add-Member -MemberType NoteProperty -Name "nsfw_bypass" -Value $true -Force
-            $json | Add-Member -MemberType NoteProperty -Name "nsfw_disabled" -Value $true -Force
-            $json | Add-Member -MemberType NoteProperty -Name "bypass_safety_check" -Value $true -Force
-            $json | Add-Member -MemberType NoteProperty -Name "safety_check_threshold" -Value 9999.0 -Force
-            $json | Add-Member -MemberType NoteProperty -Name "STARK_MARKER" -Value "STARK-Surgical" -Force
+            $json | Add-Member -NotePropertyMembers @{
+                "nsfw_bypass"            = $true
+                "nsfw_disabled"          = $true
+                "bypass_safety_check"    = $true
+                "safety_check_threshold" = 9999.0
+                "STARK_MARKER"           = "STARK-Surgical"
+            } -Force
 
             if (-not $DryRun) {
                 Create-Backup -File $file -BackupRoot $paths.BackupRoot
