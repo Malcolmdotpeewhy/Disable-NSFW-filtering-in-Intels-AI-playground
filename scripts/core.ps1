@@ -62,11 +62,13 @@ function Invoke-Patch {
     foreach ($file in $jsonFiles) {
         Write-Status "Patching $(Split-Path $file -Leaf)..."
         $json = Get-Content -Raw $file | ConvertFrom-Json
-        $json | Add-Member -Name "nsfw_bypass" -Value $true -Force
-        $json | Add-Member -Name "nsfw_disabled" -Value $true -Force
-        $json | Add-Member -Name "bypass_safety_check" -Value $true -Force
-        $json | Add-Member -Name "safety_check_threshold" -Value 9999.0 -Force
-        $json | Add-Member -Name "STARK_MARKER" -Value "STARK-Surgical" -Force
+        $json | Add-Member -NotePropertyMembers @{
+            "nsfw_bypass"            = $true
+            "nsfw_disabled"          = $true
+            "bypass_safety_check"    = $true
+            "safety_check_threshold" = 9999.0
+            "STARK_MARKER"           = "STARK-Surgical"
+        } -Force
 
         $newJson = $json | ConvertTo-Json -Depth 20
         if (-not $DryRun) {
