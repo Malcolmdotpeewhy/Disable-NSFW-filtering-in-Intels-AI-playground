@@ -83,11 +83,11 @@ function Invoke-StarkPatch {
 
             # Add bypass keys
             $json | Add-Member -NotePropertyMembers @{
-                "nsfw_bypass"            = $true
-                "nsfw_disabled"          = $true
-                "bypass_safety_check"    = $true
+                "nsfw_bypass" = $true
+                "nsfw_disabled" = $true
+                "bypass_safety_check" = $true
                 "safety_check_threshold" = 9999.0
-                "STARK_MARKER"           = "STARK-Surgical"
+                "STARK_MARKER" = "STARK-Surgical"
             } -Force
 
             if (-not $DryRun) {
