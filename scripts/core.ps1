@@ -33,6 +33,17 @@ if (-not $Path.EndsWith("\") -and -not $Path.EndsWith("/")) { $Path += "\" }
 
 # --- Actions ---
 
+# Define Actions as ScriptBlocks for reuse in UI and CLI
+$actionPatch = {
+    Invoke-StarkPatch -BasePath $Path -DryRun:$DryRun
+}
+
+$actionRestore = {
+    Invoke-StarkRestore -BasePath $Path
+}
+
+# CLI Flags Logic
+
 if ($Setup) {
     # Validate environment (delegated to Patcher lib)
     if (Test-ComfyEnvironment -BasePath $Path) {
