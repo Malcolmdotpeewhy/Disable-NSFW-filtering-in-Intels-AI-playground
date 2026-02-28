@@ -184,12 +184,14 @@ function Invoke-StarkRestore {
         "reactor_sfw.py" = $paths.ReactorSfw
     }
 
+    # Optimization: Scan directory once to avoid redundant I/O (N to 1)
+    $allBackups = @(Get-ChildItem -Path $paths.BackupRoot -Filter "*.bak" | Sort-Object LastWriteTime -Descending)
+
     foreach ($key in $targets.Keys) {
         $targetPath = $targets[$key]
-        $backups = Get-ChildItem -Path $paths.BackupRoot -Filter "$key.*.bak" | Sort-Object LastWriteTime -Descending
+        $latest = $allBackups | Where-Object { $_.Name -like "$key.*.bak" } | Select-Object -First 1
 
-        if ($backups.Count -gt 0) {
-            $latest = $backups[0]
+        if ($latest) {
             Write-Status "Restoring $key from $($latest.Name)..." "Gray"
             Copy-Item $latest.FullName $targetPath -Force
         } else {
