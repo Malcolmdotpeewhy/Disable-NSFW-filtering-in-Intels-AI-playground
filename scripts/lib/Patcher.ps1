@@ -189,7 +189,7 @@ function Invoke-StarkRestore {
 
     foreach ($key in $targets.Keys) {
         $targetPath = $targets[$key]
-        $latest = $allBackups | Where-Object { $_.Name -like "$key.*.bak" } | Select-Object -First 1
+        $latest = $allBackups.Where({ $_.Name -like "$key.*.bak" }, 'First', 1)
 
         if ($latest) {
             Write-Status "Restoring $key from $($latest.Name)..." "Gray"
